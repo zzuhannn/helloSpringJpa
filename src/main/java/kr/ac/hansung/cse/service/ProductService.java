@@ -138,4 +138,9 @@ public class ProductService {
     public List<Product> searchByName(String keyword){
         return productRepository.findByNameContaining(keyword);
     }
+
+    // 카테고리 ID로 Product 조회
+    public List<Product> searchByCategory(Long categoryId){
+        return productRepository.findByCategoryId(categoryId);
+    }
 }
