@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import kr.ac.hansung.cse.exception.ProductNotFoundException;
 import kr.ac.hansung.cse.model.Product;
 import kr.ac.hansung.cse.model.ProductForm;
+import kr.ac.hansung.cse.service.CategoryService;
 import kr.ac.hansung.cse.service.ProductService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,9 +38,11 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final CategoryService categoryService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CategoryService categoryService) {
         this.productService = productService;
+        this.categoryService = categoryService;
     }
 
 
@@ -48,9 +51,27 @@ public class ProductController {
     // ─────────────────────────────────────────────────────────────────
 
     @GetMapping
-    public String listProducts(Model model) {
-        List<Product> products = productService.getAllProducts();
+    public String listProducts(@RequestParam (required = false) String keyword,
+                               @RequestParam (required = false) Long categoryId,
+                               Model model) {
+        // 검색 결과를 담을 리스트 선언
+        List<Product> products;
+        // 키워드가 입력된 경우: 상품명 검색
+        if (keyword != null && !keyword.isBlank()) {
+            products = productService.searchByName(keyword);
+        // 카테고리만 선택된 경우: 해당 카테고리 상품만 조회
+        } else if (categoryId != null) {
+            products = productService.searchByCategory(categoryId);
+        // 검색 조건이 없으면 전체 상품 조회
+        } else {
+            products = productService.getAllProducts();
+        }
         model.addAttribute("products", products);
+        // 카테고리 드롭다운을 위한 전체 카테고리 목록 전달
+        model.addAttribute("categories", categoryService.getAllCategories());
+        // 검색 후에도 입력값/선택값이 유지되도록 현재 검색 조건 전달
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categoryId", categoryId);
         return "productList";
     }
 
